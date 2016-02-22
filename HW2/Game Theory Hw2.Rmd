@@ -1,0 +1,49 @@
+---
+title: 'Game Theory: HW 2'
+author: "Nicolas Gauthier"
+date: "February 22, 2016"
+output: 
+  html_document: 
+    number_sections: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Question 1: Dynamic battle
+### Question 2: War of attrition revisited - multiple players
+A.  
+B.  
+C.  
+### Question 3:
+### Question 4: The Good, the Bad, and the Ugly
+A. Player 1 should load **1** bullet into the gun of player 2 if $Q = 0.5$.  
+B. Player 1 should load **0** bullets into the gun of player 2 if $Q = 0.95$.  
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+simul <- read.csv('truel simultaneous-table.csv', skip = 6) %>% group_by(bullets, q) %>% summarise(payoff = mean(payoff))
+sequen <- read.csv('truel sequential-table.csv', skip = 6) %>% group_by(bullets) %>% summarise(payoff = mean(payoff), prob = sum(as.numeric(player.0....nobody)-1)/10000)
+
+max.p <- simul %>% group_by(q) %>% summarise(payoff = max(payoff)) %>% select(payoff) %>% unlist
+
+ggplot(data = simul, aes(x = bullets, y = payoff, group = q)) +
+  geom_hline(yintercept = max.p, linetype = 2) +
+  geom_line(aes(color = factor(q))) +
+  geom_text(x = 3, y = max.p[1], label = max.p[1], vjust = 2) + 
+  geom_text(x = 3, y = max.p[2], label = max.p[2], vjust = 2) + 
+  labs(title = "Payoffs for Player 1 w.r.t. number of bullets in Player 2's gun\n", 
+       x = "\nBullets in Player 2's gun", y = "Payoffs to Player 1\n") +
+  scale_color_discrete(name = 'Q') +
+  theme_minimal()
+```  
+C.  Player 1 should load **0** bullets into the gun of Player 2 in a game of sequential play. The probability that Player 1 will survive to the end of the shooting match if Player 2 has 0 guns is ```sequen[1,3]```
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = sequen, aes(x = bullets, y = payoff)) +
+  geom_line() +
+  geom_text(x = 3, y = max.p[1], label = paste("P(surive) = ", sequen[1,3]), vjust = 2) +
+  labs(title = "Payoffs for Player 1 w.r.t. number of bullets in Player 2's gun\n", 
+       x = "\nBullets in Player 2's gun", y = "Payoffs to Player 1\n") +
+  theme_minimal()
+```
+
