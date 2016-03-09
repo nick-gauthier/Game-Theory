@@ -2,10 +2,11 @@ breed [ players player ]
 
 players-own [ x u ]
 
+globals [ x2 ]
 
 to setup
   clear-all
-
+  set x2 random 100
   create-players 2 [
     set u 0
   ]
@@ -143,21 +144,6 @@ x1
 0
 100
 100
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-26
-333
-198
-366
-x2
-x2
-0
-100
-96
 1
 1
 NIL
@@ -506,7 +492,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.0.5
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

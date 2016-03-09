@@ -1,42 +1,69 @@
-breed [ players player ]
+breed [ farmers farmer ]
 
-players-own [ x u ]
+globals [ food-supply ]
+
+farmers-own [ food ]
+
+
+patches-own [ productivity ]
 
 
 to setup
-  clear-all
+  ca
 
-  create-players 2 [
-    set u 0
+  set food-supply 0
+  ask n-of n-farmers patches [
+    sprout-farmers 1 [
+      set shape "person"
+    ]
   ]
-
-  ask player 0 [set x x1]
-  ask player 1 [set x x2]
 
   reset-ticks
 end
 
+
 to go
 
-  ifelse x1 = x2
-    [ ask players [set u (V * .5) - x ]
-    ][
-      ask players with-min [x] [ set u 0 - x ]
-      ask players with-max [x] [ set u V - min [x] of players ]
-    ]
+  rain
+  harvest
+
+  if sharing? = True [
+   ask farmers [ share ]
+  ]
+
 
   tick
-  stop
+end
+
+
+to rain
+  ask patches [
+    set productivity random-normal 100 30
+    set pcolor scale-color green productivity 0 200
+  ]
+end
+
+
+to harvest
+  ask farmers [
+    set food [ productivity ] of patch-here
+  ]
+end
+
+
+to share
+  let diff abs ( mean [ food ] of farmers - food )
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-649
-470
-16
-16
-13.0
+404
+23
+1014
+654
+1
+1
+200.0
 1
 10
 1
@@ -46,21 +73,36 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-1
+1
+-1
+1
 0
 0
 1
 ticks
 30.0
 
+SLIDER
+48
+135
+182
+168
+n-farmers
+n-farmers
+2
+5
+2
+1
+1
+NIL
+HORIZONTAL
+
 BUTTON
-50
-37
-116
-70
+46
+51
+112
+84
 NIL
 setup
 NIL
@@ -74,10 +116,10 @@ NIL
 1
 
 BUTTON
-51
-85
-114
-118
+47
+92
+110
+125
 NIL
 go
 T
@@ -91,10 +133,10 @@ NIL
 1
 
 BUTTON
-51
-130
-114
-163
+119
+91
+182
+124
 tick
 go
 NIL
@@ -107,61 +149,35 @@ NIL
 NIL
 1
 
+PLOT
+9
+497
+392
+647
+Food
+time-step
+food
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -13840069 true "" "plot [food] of farmer 0"
+"pen-1" 1.0 0 -2674135 true "" "plot [food] of farmer 1"
+
 SWITCH
-14
-226
-128
-259
-dynamic?
-dynamic?
-1
+69
+263
+179
+296
+sharing?
+sharing?
+0
 1
 -1000
-
-SLIDER
-15
-181
-187
-214
-V
-V
-0
-100
-50
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-24
-285
-196
-318
-x1
-x1
-0
-100
-100
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-26
-333
-198
-366
-x2
-x2
-0
-100
-96
-1
-1
-NIL
-HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -510,22 +526,6 @@ NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
-<experiments>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <metric>[u] of player 0</metric>
-    <metric>[u] of player 1</metric>
-    <enumeratedValueSet variable="V">
-      <value value="50"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="x1" first="1" step="1" last="100"/>
-    <steppedValueSet variable="x2" first="1" step="1" last="100"/>
-    <enumeratedValueSet variable="dynamic?">
-      <value value="false"/>
-    </enumeratedValueSet>
-  </experiment>
-</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
