@@ -1,40 +1,50 @@
-breed [ farmers farmer ]
+breed [ farmers farmer ]  ;; define agents as farmers
 
-globals [ food-supply ]
+globals [ food-requirement ]  ;; all farmers have the same required food to survive
 
-farmers-own [ food ]
+farmers-own [ food ]  ;; each farmer has its own food supply
 
+links-own [ trust ]  ;; each link between farmers has avalue between 0 and 1 that
+                     ;; defines the trust of that relationship
 
-patches-own [ productivity ]
-
+patches-own [ productivity ]  ;; each patch has its own randomly varying productivity value
 
 to setup
   ca
-
-  set food-supply 0
+  set food-requirement 100  ;; set the food requirement of all agents to the average productivity
+                            ;; of patches
   ask n-of n-farmers patches [
     sprout-farmers 1 [
       set shape "person"
+      set food 0
     ]
   ]
 
+  ask farmers [
+    create-links-to other farmers [
+      set shape "curve"
+      set color red
+      set trust 1
+    ]
+  ]
+
+  layout-circle farmers 2
   reset-ticks
 end
 
-
 to go
-
   rain
-  harvest
 
-  if sharing? = True [
-   ask farmers [ share ]
+  ask farmers [
+    harvest
+    eat
+    if sharing? = True [ share ]
   ]
 
+  ask links [ if trust < 0 [ die ] ]
 
   tick
 end
-
 
 to rain
   ask patches [
@@ -43,42 +53,48 @@ to rain
   ]
 end
 
-
 to harvest
-  ask farmers [
-    set food [ productivity ] of patch-here
-  ]
+    set food food + [ productivity ] of patch-here
 end
 
+to eat
+  set food food - food-requirement
+end
 
 to share
-  let diff abs ( mean [ food ] of farmers - food )
-
+  if food < 0 [
+    let partner max-one-of in-link-neighbors [ food ]
+    let supply max list 0 [ food ] of partner
+    let demand ( abs food ) * [ trust ] of in-link-from partner
+    let gift min list supply demand
+    set food food + gift
+    ask partner [ set food food - gift ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-404
-23
-1014
-654
-1
-1
-200.0
+220
+18
+878
+697
+2
+2
+129.6
 1
 10
 1
 1
 1
 0
-1
-1
-1
--1
-1
--1
-1
 0
 0
+1
+-2
+2
+-2
+2
+1
+1
 1
 ticks
 30.0
@@ -150,18 +166,18 @@ NIL
 1
 
 PLOT
-9
-497
-392
-647
+51
+707
+434
+857
 Food
 time-step
 food
 0.0
-10.0
-0.0
-10.0
-true
+1000.0
+-1000.0
+1000.0
+false
 false
 "" ""
 PENS
@@ -169,10 +185,10 @@ PENS
 "pen-1" 1.0 0 -2674135 true "" "plot [food] of farmer 1"
 
 SWITCH
-69
-263
-179
-296
+47
+180
+157
+213
 sharing?
 sharing?
 0
@@ -538,6 +554,16 @@ true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
+
+curve
+1.0
+-0.2 0 0.0 1.0
+0.0 1 1.0 0.0
+0.2 0 0.0 1.0
+link direction
+true
+1
+Polygon -2674135 true true 150 60 135 105 150 90 165 105 150 60 150 60
 
 @#$#@#$#@
 0
