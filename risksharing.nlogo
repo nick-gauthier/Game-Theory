@@ -1,22 +1,26 @@
 breed [ farmers farmer ]  ;; define agents as farmers
 
-globals [ food-requirement ]  ;; all farmers have the same required food to survive
+globals [ precip food-requirement ]  ;; all farmers have the same required food to survive
 
-farmers-own [ food ]  ;; each farmer has its own food supply
+farmers-own [ food famine-counter ]  ;; each farmer has its own food supply
 
 links-own [ trust ]  ;; each link between farmers has avalue between 0 and 1 that
                      ;; defines the trust of that relationship
 
-patches-own [ productivity ]  ;; each patch has its own randomly varying productivity value
+patches-own [ barley-prop productivity ]  ;; each patch has its own randomly varying productivity value
 
 to setup
   ca
-  set food-requirement 100  ;; set the food requirement of all agents to the average productivity
+  set food-requirement 400  ;; set the food requirement of all agents to the average productivity
                             ;; of patches
+
+  ask patches [ set barley-prop 0 ]
+
   ask n-of n-farmers patches [
     sprout-farmers 1 [
       set shape "person"
       set food 0
+      set famine-counter 0
     ]
   ]
 
@@ -33,6 +37,7 @@ to setup
 end
 
 to go
+  if ( count farmers < 2 ) or ( not any? farmers ) [ stop ]
   rain
 
   ask farmers [
@@ -41,15 +46,18 @@ to go
     if sharing? = True [ share ]
   ]
 
+  check-die
+
   ask links [ if trust < 0 [ die ] ]
 
   tick
 end
 
 to rain
+  set precip random-normal 400 100
   ask patches [
-    set productivity random-normal 100 30
-    set pcolor scale-color green productivity 0 200
+    set productivity precip
+    set pcolor scale-color green productivity 0 800
   ]
 end
 
@@ -62,13 +70,35 @@ to eat
 end
 
 to share
-  if food < 0 [
-    let partner max-one-of in-link-neighbors [ food ]
-    let supply max list 0 [ food ] of partner
-    let demand ( abs food ) * [ trust ] of in-link-from partner
-    let gift min list supply demand
+  if food < 0 [  ;; farmers only ask for food if they don't have enough to meet requirement
+
+    let partner max-one-of in-link-neighbors [ food ]  ;; find a trading partner, choosing
+                                                       ;; the farmer with the most food
+
+    let supply max list 0 ( [ food ] of partner - 10 )  ;; find how much food the partner
+                                                        ;; has to offer, assuming partner will
+                                                        ;; never give ALL of their food
+
+    let demand ( abs food ) * [ trust ] of in-link-from partner  ;; find how much food the asking
+                                                                 ;; farmer needs, weighted by
+                                                                 ;; the trust the giving partner
+                                                                 ;; has in reciprocation
+
+    let gift min list supply demand  ;; farmers give food equal to their partner's demand, up to
+                                     ;; the what they have available to give
     set food food + gift
     ask partner [ set food food - gift ]
+  ]
+end
+
+to check-die
+  ask farmers [
+    ifelse food < 0 [
+      set famine-counter famine-counter + 1
+    ][
+    set famine-counter 0
+    ]
+    if famine-counter >= 3 [ die ]
   ]
 end
 @#$#@#$#@
@@ -108,7 +138,7 @@ n-farmers
 n-farmers
 2
 5
-2
+3
 1
 1
 NIL
@@ -165,25 +195,6 @@ NIL
 NIL
 1
 
-PLOT
-51
-707
-434
-857
-Food
-time-step
-food
-0.0
-1000.0
--1000.0
-1000.0
-false
-false
-"" ""
-PENS
-"default" 1.0 0 -13840069 true "" "plot [food] of farmer 0"
-"pen-1" 1.0 0 -2674135 true "" "plot [food] of farmer 1"
-
 SWITCH
 47
 180
@@ -194,6 +205,39 @@ sharing?
 0
 1
 -1000
+
+PLOT
+54
+710
+359
+860
+Rain
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot precip"
+
+SLIDER
+42
+230
+215
+264
+drought-risk
+drought-risk
+0
+100
+20
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -563,7 +607,7 @@ curve
 link direction
 true
 1
-Polygon -2674135 true true 150 60 135 105 150 90 165 105 150 60 150 60
+Polygon -2674135 true true 150 60 135 105 150 90 165 105 150 60
 
 @#$#@#$#@
 0
